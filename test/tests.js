@@ -43,6 +43,20 @@ describe("🐟🐟🐟🐟🐟🐟🐟🐟🐟", async function () {
         // Transfer 50 tokens from addr1 to addr2
         await contract.connect(addr1)
         expect(contract.transfer(addr2.address, 50)).to.be.reverted;
+    });
+    it('Buy 🐟', async function () {
+        const [_, addr1] = await ethers.getSigners();
 
+        const {contract} = await loadFixture(deploy)
+
+        contract.on("Bought", (_from) => {
+            console.log('Bought', _from);
+        });
+
+        const tx = await contract.connect(addr1).buy({ value: ethers.utils.parseEther("1.0") });
+        const receipt = await tx.wait()
+        receipt.events?.filter(event => {return event.event === "Bought" })
+            .forEach(bought_event => {bought_event && console.log('Bought by: ', bought_event.args['from'])})
+        expect(await contract.balanceOf(addr1.address)).to.equal(1);
     });
 })
