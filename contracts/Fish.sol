@@ -9,13 +9,12 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract Fish is ERC20, ERC20Burnable, Ownable, ERC20Permit {
 
-
     constructor()
     ERC20(unicode"🐟", unicode"🐟")
     Ownable(tx.origin)
     ERC20Permit(unicode"🐟")
     {
-        _mint(msg.sender, 2000 * 10 ** decimals());
+        _mint(msg.sender, 800 * 10 ** decimals());
     }
 
     mapping(address => uint) public donators;
@@ -23,6 +22,7 @@ contract Fish is ERC20, ERC20Burnable, Ownable, ERC20Permit {
     function decimals() public pure override returns (uint8) {
         return 0;
     }
+
 
     function transfer(address to, uint256 value) public override returns (bool) {
         require(tx.origin == owner(), unicode"You cannot transfer 🐟");
@@ -49,8 +49,17 @@ contract Fish is ERC20, ERC20Burnable, Ownable, ERC20Permit {
         emit Bought(msg.sender);
     }
 
+    event Donation(
+        address indexed from,
+        uint256 amount
+    );
     function donate() external payable {
-//        emit Donated(msg.sender, msg.value);
+        if (donators[msg.sender] > 0) {
+            donators[msg.sender] += msg.value;
+        } else {
+            donators[msg.sender] = msg.value;
+        }
+        emit Donation(msg.sender, donators[msg.sender]);
     }
 
     receive() external payable {
@@ -59,4 +68,10 @@ contract Fish is ERC20, ERC20Burnable, Ownable, ERC20Permit {
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount * (10 ** decimals()));
     }
+
+    function payout(uint256 amount) public onlyOwner {
+        address payable owner = payable(owner());
+        owner.transfer(amount * (10 ** decimals()));
+    }
+
 }
