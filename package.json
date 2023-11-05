@@ -8,6 +8,7 @@
     "node": "npx hardhat node",
     "deploy": "npx hardhat run --network zeniq ./scripts/deploy.js",
     "mint": "npx hardhat run --network zeniq ./scripts/mint.js",
+    "payout": "npx hardhat run --network zeniq ./scripts/payout.js",
     "test": " solcjs --abi -o abi -p --include-path node_modules/ --base-path . ./contracts/Fish.sol && npx hardhat test"
   },
   "keywords": [],
