@@ -1,23 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract Fish is ERC20, ERC20Burnable, Ownable, ERC20Permit {
+contract Fish is ERC20, ERC20Burnable, Ownable {
 
     constructor()
     ERC20(unicode"🐟", unicode"🐟")
-    Ownable(tx.origin)
-    ERC20Permit(unicode"🐟")
+    Ownable()
     {
-        _mint(msg.sender, 800 * 10 ** decimals());
+        _mint(msg.sender, 800);
     }
-
-    mapping(address => uint) public donators;
 
     function decimals() public pure override returns (uint8) {
         return 0;
@@ -45,33 +41,58 @@ contract Fish is ERC20, ERC20Burnable, Ownable, ERC20Permit {
     );
     function buy() external payable {
         require(msg.value == 1 ether, unicode"1 🐟 = 1 ZENIQ");
-        _mint(msg.sender, 1 * (10 ** decimals()));
+        _mint(msg.sender, 1);
         emit Bought(msg.sender);
     }
 
-    event Donation(
+
+
+    struct Donation {
+        address walletAddress;
+        string name;
+        uint256 amount;
+    }
+    Donation[10] public donations;
+    mapping(address => Donation) public donators;
+    event Donate(
         address indexed from,
+        string name,
         uint256 amount
     );
-    function donate() external payable {
-        if (donators[msg.sender] > 0) {
-            donators[msg.sender] += msg.value;
-        } else {
-            donators[msg.sender] = msg.value;
+    function donate(string memory name) external payable {
+        Donation memory donation = Donation(msg.sender, name, donators[msg.sender].amount + msg.value);
+        donators[msg.sender] = donation;
+
+        uint256 lowestValue = donations[0].amount;
+        uint256 lowestIndex = 0;
+        bool found = false;
+        for (uint256 i = 0; i < donations.length; i++) {
+            if (donations[i].walletAddress == msg.sender) {
+                donations[i] = donation;
+                found = true;
+                break;
+            }
+            if (donations[i].amount < lowestValue) {
+                lowestValue = donations[i].amount;
+                lowestIndex = i;
+            }
         }
-        emit Donation(msg.sender, donators[msg.sender]);
+        if (donation.amount > lowestValue && !found) {
+            donations[lowestIndex] = donation;
+        }
+        emit Donate(msg.sender, donation.name, donation.amount);
     }
 
     receive() external payable {
     }
 
     function mint(address to, uint256 amount) public onlyOwner {
-        _mint(to, amount * (10 ** decimals()));
+        _mint(to, amount);
     }
 
-    function payout(uint256 amount) public onlyOwner {
+    function payout() public onlyOwner {
         address payable owner = payable(owner());
-        owner.transfer(amount * (10 ** decimals()));
+        owner.transfer(address(this).balance);
     }
 
 }
