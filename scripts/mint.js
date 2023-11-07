@@ -1,8 +1,9 @@
 const hre = require('hardhat');
+const contract_address = require("../constants/contract_address");
 const {ethers} = hre;
 
 async function main() {
-    const contract = await ethers.getContractAt('Fish', '0xde0d75886ae8afe7b695FEfD8a2bB2474B3cD292');
+    const contract = await ethers.getContractAt('Fish', contract_address);
 
     console.log(await contract.owner())
     await contract.mint(contract.owner(), 50);

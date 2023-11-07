@@ -66,7 +66,7 @@ describe("🐟🐟🐟🐟🐟🐟🐟🐟🐟", async function () {
         let balance_contract = await ethers.provider.getBalance(contract.address)
         expect(hre.ethers.utils.formatEther(balance_contract)).to.equal("1.0");
 
-        const tx = await contract.payout(ethers.utils.parseEther("1.0") );
+        const tx = await contract.payout();
         await tx.wait()
 
         balance_contract = await ethers.provider.getBalance(contract.address)
@@ -77,20 +77,33 @@ describe("🐟🐟🐟🐟🐟🐟🐟🐟🐟", async function () {
 
         const {contract} = await loadFixture(deploy)
 
-        let tx = await contract.connect(addr1).donate({ value: ethers.utils.parseEther("1.0") });
+        let tx = await contract.connect(addr1).donate('John', { value: ethers.utils.parseEther("1.0") });
         const receipt = await tx.wait()
-        receipt.events?.filter(event => {return event.event === "Donation" })
+        receipt.events?.filter(event => {return event.event === "Donate" })
             .forEach(donation_event => {donation_event && console.log('EVENT Donation by: ',
-                donation_event.args['from'], hre.ethers.utils.formatEther(donation_event.args['amount']))})
+                donation_event.args['name'], hre.ethers.utils.formatEther(donation_event.args['amount']))})
 
         let balance_contract = await ethers.provider.getBalance(contract.address)
         expect(hre.ethers.utils.formatEther(balance_contract)).to.equal("1.0");
-        expect(hre.ethers.utils.formatEther(await contract.donators(addr1.address))).to.equal("1.0");
+        expect(hre.ethers.utils.formatEther((await contract.donators(addr1.address)).amount)).to.equal("1.0");
 
-        tx = await contract.connect(addr1).donate({ value: ethers.utils.parseEther("3.0") });
+        tx = await contract.connect(addr1).donate('John', { value: ethers.utils.parseEther("3.0") });
         await tx.wait()
         balance_contract = await ethers.provider.getBalance(contract.address)
         expect(hre.ethers.utils.formatEther(balance_contract)).to.equal("4.0");
-        expect(hre.ethers.utils.formatEther(await contract.donators(addr1.address))).to.equal("4.0");
+        expect(hre.ethers.utils.formatEther((await contract.donators(addr1.address)).amount)).to.equal("4.0");
+    });
+    it('Top Donations 🐟', async function () {
+        const [_, addr1, addr2, addr3] = await ethers.getSigners();
+
+        const {contract} = await loadFixture(deploy)
+
+        let tx = await contract.connect(addr1).donate('John', { value: ethers.utils.parseEther("1.0") });
+        await tx.wait()
+        tx = await contract.connect(addr2).donate('Bill', { value: ethers.utils.parseEther("3.0") });
+        await tx.wait()
+        tx = await contract.connect(addr3).donate('Jeffrey', { value: ethers.utils.parseEther("2.0") });
+        await tx.wait()
+
     });
 })

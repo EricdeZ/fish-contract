@@ -12,10 +12,8 @@ contract Fish is ERC20, ERC20Burnable, Ownable {
     ERC20(unicode"🐟", unicode"🐟")
     Ownable()
     {
-        _mint(msg.sender, 800 * 10 ** decimals());
+        _mint(msg.sender, 800);
     }
-
-    mapping(address => uint) public donators;
 
     function decimals() public pure override returns (uint8) {
         return 0;
@@ -47,20 +45,49 @@ contract Fish is ERC20, ERC20Burnable, Ownable {
         emit Bought(msg.sender);
     }
 
-    event Donation(
+
+
+    struct Donation {
+        address walletAddress;
+        string name;
+        uint256 amount;
+    }
+    Donation[10] public donations;
+    mapping(address => Donation) public donators;
+    event Donate(
         address indexed from,
+        string name,
         uint256 amount
     );
-    function donate() external payable {
-        donators[msg.sender] += msg.value;
-        emit Donation(msg.sender, donators[msg.sender]);
+    function donate(string memory name) external payable {
+        Donation memory donation = Donation(msg.sender, name, donators[msg.sender].amount + msg.value);
+        donators[msg.sender] = donation;
+
+        uint256 lowestValue = donations[0].amount;
+        uint256 lowestIndex = 0;
+        bool found = false;
+        for (uint256 i = 0; i < donations.length; i++) {
+            if (donations[i].walletAddress == msg.sender) {
+                donations[i] = donation;
+                found = true;
+                break;
+            }
+            if (donations[i].amount < lowestValue) {
+                lowestValue = donations[i].amount;
+                lowestIndex = i;
+            }
+        }
+        if (donation.amount > lowestValue && !found) {
+            donations[lowestIndex] = donation;
+        }
+        emit Donate(msg.sender, donation.name, donation.amount);
     }
 
     receive() external payable {
     }
 
     function mint(address to, uint256 amount) public onlyOwner {
-        _mint(to, amount * (10 ** decimals()));
+        _mint(to, amount);
     }
 
     function payout() public onlyOwner {
