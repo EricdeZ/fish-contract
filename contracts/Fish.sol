@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract Fish is ERC20, ERC20Burnable, Ownable, ERC20Permit {
+contract Fish is ERC20, ERC20Burnable, Ownable {
 
     constructor()
     ERC20(unicode"🐟", unicode"🐟")
-    Ownable(tx.origin)
-    ERC20Permit(unicode"🐟")
+    Ownable()
     {
         _mint(msg.sender, 800 * 10 ** decimals());
     }
@@ -45,7 +43,7 @@ contract Fish is ERC20, ERC20Burnable, Ownable, ERC20Permit {
     );
     function buy() external payable {
         require(msg.value == 1 ether, unicode"1 🐟 = 1 ZENIQ");
-        _mint(msg.sender, 1 * (10 ** decimals()));
+        _mint(msg.sender, 1);
         emit Bought(msg.sender);
     }
 
@@ -54,11 +52,7 @@ contract Fish is ERC20, ERC20Burnable, Ownable, ERC20Permit {
         uint256 amount
     );
     function donate() external payable {
-        if (donators[msg.sender] > 0) {
-            donators[msg.sender] += msg.value;
-        } else {
-            donators[msg.sender] = msg.value;
-        }
+        donators[msg.sender] += msg.value;
         emit Donation(msg.sender, donators[msg.sender]);
     }
 
@@ -69,9 +63,9 @@ contract Fish is ERC20, ERC20Burnable, Ownable, ERC20Permit {
         _mint(to, amount * (10 ** decimals()));
     }
 
-    function payout(uint256 amount) public onlyOwner {
+    function payout() public onlyOwner {
         address payable owner = payable(owner());
-        owner.transfer(amount * (10 ** decimals()));
+        owner.transfer(address(this).balance);
     }
 
 }

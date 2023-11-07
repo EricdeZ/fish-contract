@@ -11,11 +11,13 @@ module.exports = {
     zeniq: {
       url: "https://smart.zeniq.network:9545",
       chainId: 383414847825,
-      accounts: [privateKey]
+      accounts: {
+        mnemonic: privateKey
+      }
     }
   },
   solidity: {
-    version: "0.8.20",
+    version: "0.8.19",
     settings: {
       optimizer: {
         enabled: true,
